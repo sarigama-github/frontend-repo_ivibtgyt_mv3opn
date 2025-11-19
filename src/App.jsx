@@ -1,70 +1,86 @@
+import { useEffect, useState } from 'react'
+import Auth from './components/Auth'
+import Quiz from './components/Quiz'
+import Dashboard from './components/Dashboard'
+
 function App() {
+  const [session, setSession] = useState(null)
+  const [category, setCategory] = useState('phishing')
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const user = localStorage.getItem('user')
+    if (token && user) setSession({ token, user: JSON.parse(user) })
+  }, [])
+
+  const signOut = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setSession(null)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Subtle pattern overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]"></div>
 
-      <div className="relative min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full">
-          {/* Header with Flames icon */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center mb-6">
-              <img
-                src="/flame-icon.svg"
-                alt="Flames"
-                className="w-24 h-24 drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]"
-              />
-            </div>
-
-            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-              Flames Blue
-            </h1>
-
-            <p className="text-xl text-blue-200 mb-6">
-              Build applications through conversation
-            </p>
-          </div>
-
-          {/* Instructions */}
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-8 shadow-xl mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Describe your idea</h3>
-                <p className="text-blue-200/80 text-sm">Use the chat panel on the left to tell the AI what you want to build</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Watch it build</h3>
-                <p className="text-blue-200/80 text-sm">Your app will appear in this preview as the AI generates the code</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Refine and iterate</h3>
-                <p className="text-blue-200/80 text-sm">Continue the conversation to add features and make changes</p>
-              </div>
+      <div className="relative min-h-screen p-6">
+        <header className="max-w-5xl mx-auto flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <img src="/flame-icon.svg" className="w-10 h-10" />
+            <div>
+              <h1 className="text-white text-2xl font-bold">Cyber Safety Trainer</h1>
+              <p className="text-blue-200 text-sm">Learn safe digital habits through quick, fun quizzes</p>
             </div>
           </div>
+          <a href="/test" className="text-blue-300 hover:text-white text-sm">System Check</a>
+        </header>
 
-          {/* Footer */}
-          <div className="text-center">
-            <p className="text-sm text-blue-300/60">
-              No coding required • Just describe what you want
-            </p>
+        <main className="max-w-5xl mx-auto grid md:grid-cols-3 gap-6">
+          <div className="md:col-span-1 space-y-6">
+            <div className="bg-slate-800/60 border border-blue-500/20 rounded-xl p-4">
+              <h2 className="text-white font-semibold mb-3">Modules</h2>
+              <div className="flex flex-col gap-2">
+                {[
+                  {key:'phishing', label:'Phishing'},
+                  {key:'credential', label:'Credential Reuse'},
+                  {key:'rogueapps', label:'Rogue Apps'}
+                ].map(m => (
+                  <button key={m.key} onClick={()=>setCategory(m.key)} className={`text-left px-3 py-2 rounded ${category===m.key?'bg-blue-600 text-white':'bg-white/5 text-blue-200 hover:bg-white/10'}`}>{m.label}</button>
+                ))}
+              </div>
+            </div>
+
+            {session && (
+              <div className="bg-slate-800/60 border border-blue-500/20 rounded-xl p-4">
+                <Dashboard token={session.token} onSignOut={signOut} />
+              </div>
+            )}
           </div>
-        </div>
+
+          <div className="md:col-span-2 space-y-6">
+            {!session ? (
+              <Auth onAuthed={setSession} />
+            ) : (
+              <div className="bg-slate-800/60 border border-blue-500/20 rounded-xl p-4">
+                <h2 className="text-white font-semibold mb-4">Quiz: {category}</h2>
+                <Quiz token={session.token} category={category} />
+              </div>
+            )}
+
+            <div className="bg-slate-800/60 border border-blue-500/20 rounded-xl p-4 text-blue-200 text-sm">
+              <h3 className="text-white font-semibold mb-2">How it helps</h3>
+              <ul className="list-disc ml-6 space-y-1">
+                <li>Spot phishing attempts using real-world scenarios</li>
+                <li>Avoid password reuse and strengthen account security</li>
+                <li>Identify rogue mobile apps and safer installation practices</li>
+              </ul>
+            </div>
+          </div>
+        </main>
+
+        <footer className="max-w-5xl mx-auto mt-8 text-center text-blue-300/70 text-sm">
+          Practice makes safe. Keep your data protected.
+        </footer>
       </div>
     </div>
   )
